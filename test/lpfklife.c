@@ -97,7 +97,9 @@ int main(void)
 		i = lpfk_read(&ctx);
 
 		if (i >= 0) {
+#ifdef DEBUG
 			printf("key %d\n", i);
+#endif
 			// Key down, toggle the LED
 			lpfk_set_led(&ctx, i, !lpfk_get_led(&ctx, i));
 
