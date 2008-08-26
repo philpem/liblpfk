@@ -9,7 +9,7 @@ all:	liblpfk.so lpfktest lpfklife
 clean:
 	-rm -f lpfktest liblpfk.so*
 	-rm -f src/*.o test/*.o
-	-rf -f src/*~ test/*~ *~
+	-rm -f src/*~ test/*~ *~
 
 liblpfk.so:	src/liblpfk.o
 	$(CC) -shared -Wl,-soname,$(SONAME) -o $@ $<
