@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	if ((i = lpfk_open(argv[1], &ctx)) != LPFK_E_OK) {
+	if ((i = lpfk_open(&ctx, argv[1])) != LPFK_E_OK) {
 		switch(i) {
 			case LPFK_E_PORT_OPEN:
 				printf("Error opening comm port.\n");
