@@ -70,7 +70,7 @@ enum {
 	LPFK_E_NOT_PRESENT,			///< LPFK not present on specified port.
 	LPFK_E_COMMS,				///< Communication error.
 	LPFK_E_PARAM,				///< Invalid function parameter.
-	LPFK_E_NOT_ENABLED			///< Attempt to read key when LPFK disabled
+LPFK_E_NOT_ENABLED			///< Attempt to read key when LPFK disabled
 };
 
 /**
@@ -82,7 +82,7 @@ enum {
  * @return	LPFK_E_OK on success, LPFK_E_PORT_OPEN if port could not be
  * 			opened, LPFK_E_NOT_PRESENT if no LPFK present on specified port.
  */
-int lpfk_open(const char *port, LPFK_CTX *ctx);
+int lpfk_open(LPFK_CTX *ctx, const char *port);
 
 /**
  * @brief	Close the LPFK.
@@ -97,7 +97,7 @@ int lpfk_close(LPFK_CTX *ctx);
  * @param	val		true to enable the LPFK's keys, false to disable.
  * @return	LPFK_E_OK on success, LPFK_E_COMMS on comms error.
  */
-int lpfk_enable(LPFK_CTX *ctx, int val);
+int lpfk_enable(LPFK_CTX *ctx, const int val);
 
 /**
  * @brief	Set or clear an LED in the cached LED mask buffer.

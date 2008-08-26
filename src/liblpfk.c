@@ -57,7 +57,7 @@
 #include "liblpfk.h"
 
 /* lpfk_open {{{ */
-int lpfk_open(const char *port, LPFK_CTX *ctx)
+int lpfk_open(LPFK_CTX *ctx, const char *port)
 {
 	struct termios newtio;
 	int status;
@@ -148,9 +148,8 @@ int lpfk_open(const char *port, LPFK_CTX *ctx)
 		ctx->led_mask = 0;
 		ctx->fd = fd;
 
-		// Enable the LPFK
-		write(fd, "\x08", 1);
-		ctx->enabled = true;
+		// Disable LPFK keyboard scanning
+		lpfk_enable(ctx, false);
 
 		// Return OK status
 		return LPFK_E_OK;
