@@ -184,7 +184,7 @@ int lpfk_close(LPFK_CTX *ctx)
 /* }}} */
 
 /* lpfk_enable {{{ */
-int lpfk_enable(LPFK_CTX *ctx, int val)
+int lpfk_enable(LPFK_CTX *ctx, const int val)
 {
 	if (val) {
 		// val == true, enable the LPFK
