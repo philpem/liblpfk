@@ -56,6 +56,7 @@
 
 #include "liblpfk.h"
 
+/* lpfk_open {{{ */
 int lpfk_open(const char *port, LPFK_CTX *ctx)
 {
 	struct termios newtio;
@@ -156,6 +157,9 @@ int lpfk_open(const char *port, LPFK_CTX *ctx)
 	}
 }
 
+/* }}} */
+
+/* lpfk_close {{{ */
 int lpfk_close(LPFK_CTX *ctx)
 {
 	int status;
@@ -178,7 +182,9 @@ int lpfk_close(LPFK_CTX *ctx)
 	// Done!
 	return LPFK_E_OK;
 }
+/* }}} */
 
+/* lpfk_enable {{{ */
 int lpfk_enable(LPFK_CTX *ctx, int val)
 {
 	if (val) {
@@ -199,15 +205,10 @@ int lpfk_enable(LPFK_CTX *ctx, int val)
 	return LPFK_E_OK;
 }
 
-/**
- * @brief	Set or clear an LED on the LPFK.
- * @param	ctx		Pointer to an LPFK_CTX struct initialised by lpfk_open().
- * @param	num		LED/key number, from 0 to 31.
- * @param	state	State, true for on, false for off.
- * @return	LPFK_E_OK on success, LPFK_E_PARAM on bad parameter, LPFK_E_COMMS
- * 			on comms error.
- */
-int lpfk_set_led(LPFK_CTX *ctx, const int num, const int state)
+/* }}} */
+
+/* lpfk_set_led_cached {{{ */
+int lpfk_set_led_cached(LPFK_CTX *ctx, const int num, const int state)
 {
 	int i;
 	time_t tm;
@@ -221,73 +222,21 @@ int lpfk_set_led(LPFK_CTX *ctx, const int num, const int state)
 	}
 
 	// parameters OK, now build the LED mask
-	mask = (0x80 >> (num % 8)) << ((num / 8) * 8);
-
-	leds = ctx->led_mask;
+	mask = (0x80 >> (num % 8)) << ((3 - (num / 8)) * 8);
 
 	// mask the specified bit
 	if (state) {
-		leds |= mask;
+		ctx->led_mask |= mask;
 	} else {
-		leds &= ~mask;
+		ctx->led_mask &= ~mask;
 	}
-
-	// send new LED mask to the LPFK
-	buf[0] = 0x94;
-	buf[1] = leds & 0xff;
-	buf[2] = leds >> 8;
-	buf[3] = leds >> 16;
-	buf[4] = leds >> 24;
-
-	// make 5 attempts to set the LEDs
-	for (i=0; i<5; i++) {
-		if (write(ctx->fd, &buf, 5) < 5) {
-			continue;
-		}
-
-		// check for response -- 0x81 = OK, 0x80 = retransmit
-		// save current time (in seconds)
-		tm = time(NULL);
-
-		// loop until 2 seconds have passed, or LPFK responds
-		status = 0x00;
-		do {
-			// read data, loop if not successful
-			if (read(ctx->fd, &status, 1) < 1) {
-				continue;
-			}
-
-			// we got some data, what is it?
-			if (status == 0x81) {
-				// 0x81 -- received successfully
-				break;
-			}
-		} while ((time(NULL) - tm) < 2);
-
-		// status OK?
-		if (status == 0x81) {
-			// 0x81: OK
-			break;
-		} else if (status == 0x80) {
-			// 0x80: Retransmit request
-			continue;
-		}
-	}
-
-	// update the context
-	ctx->led_mask = leds;
 
 	return LPFK_E_OK;
 }
+/* }}} */
 
-/**
- * @brief	Set or clear all the LEDs on the LPFK.
- * @param	ctx		Pointer to an LPFK_CTX struct initialised by lpfk_open().
- * @param	state	State, true for on, false for off.
- * @return	LPFK_E_OK on success, LPFK_E_PARAM on bad parameter, LPFK_E_COMMS
- * 			on comms error.
- */
-int lpfk_set_leds(LPFK_CTX *ctx, const int state)
+/* lpfk_set_leds_cached {{{ */
+int lpfk_set_leds_cached(LPFK_CTX *ctx, const int state)
 {
 	int i;
 	time_t tm;
@@ -297,18 +246,30 @@ int lpfk_set_leds(LPFK_CTX *ctx, const int state)
 
 	if (state) {
 		// all LEDs on
-		leds = 0xFFFFFFFF;
+		ctx->led_mask = 0xFFFFFFFF;
 	} else {
 		// all LEDs off
-		leds = 0x00000000;
+		ctx->led_mask = 0x00000000;
 	}
+
+	return LPFK_E_OK;
+}
+/* }}} */
+
+/* lpfk_update_leds {{{ */
+int lpfk_update_leds(LPFK_CTX *ctx)
+{
+	int i;
+	time_t tm;
+	unsigned char buf[5];
+	unsigned char status;
 
 	// send new LED mask to the LPFK
 	buf[0] = 0x94;
-	buf[1] = leds & 0xff;
-	buf[2] = leds >> 8;
-	buf[3] = leds >> 16;
-	buf[4] = leds >> 24;
+	buf[1] = ctx->led_mask >> 24;
+	buf[2] = ctx->led_mask >> 16;
+	buf[3] = ctx->led_mask >> 8;
+	buf[4] = ctx->led_mask & 0xff;
 
 	// make 5 attempts to set the LEDs
 	for (i=0; i<5; i++) {
@@ -345,18 +306,27 @@ int lpfk_set_leds(LPFK_CTX *ctx, const int state)
 		}
 	}
 
-	// update the context
-	ctx->led_mask = leds;
-
 	return LPFK_E_OK;
 }
+/* }}} */
 
-/**
- * @brief	Get the status of an LED on the LPFK.
- * @param	ctx		Pointer to an LPFK_CTX struct initialised by lpfk_open().
- * @param	num		LED/key number, from 0 to 31.
- * @return	true if LED is on, false otherwise.
- */
+/* lpfk_set_led {{{ */
+int lpfk_set_led(LPFK_CTX *ctx, const int num, const int state)
+{
+	lpfk_set_led_cached(ctx, num, state);
+	return lpfk_update_leds(ctx);
+}
+/* }}} */
+
+/* lpfk_set_leds {{{ */
+int lpfk_set_leds(LPFK_CTX *ctx, const int state)
+{
+	lpfk_set_leds_cached(ctx, state);
+	return lpfk_update_leds(ctx);
+}
+/* }}} */
+
+/* lpfk_get_led {{{ */
 int lpfk_get_led(LPFK_CTX *ctx, const int num)
 {
 	unsigned long mask;
@@ -367,23 +337,25 @@ int lpfk_get_led(LPFK_CTX *ctx, const int num)
 	}
 
 	// parameters OK, now build the LED mask
-	mask = (0x80 >> (num % 8)) << ((num / 8) * 8);
+	mask = (0x80 >> (num % 8)) << ((3 - (num / 8)) * 8);
 	if (ctx->led_mask & mask) {
 		return true;
 	} else {
 		return false;
 	}
 }
+/* }}} */
 
-/**
- * @brief	Read a key from the LPFK
- * @param	ctx		Pointer to an LPFK_CTX struct initialised by lpfk_open().
- * @return	-1 if no keys in buffer, 0-31 for key 1-32 down.
- */
+/* lpfk_read {{{ */
 int lpfk_read(LPFK_CTX *ctx)
 {
 	int nbytes;
 	unsigned char key;
+
+	// make sure the LPFK is enabled before trying to read a scancode
+	if (!ctx->enabled) {
+		return LPFK_E_NOT_ENABLED;
+	}
 
 	// try and read a byte (keycode) from the LPFK
 	nbytes = read(ctx->fd, &key, 1);
@@ -396,4 +368,5 @@ int lpfk_read(LPFK_CTX *ctx)
 		return key;
 	}
 }
+/* }}} */
 

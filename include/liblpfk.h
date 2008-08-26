@@ -69,7 +69,8 @@ enum {
 	LPFK_E_PORT_OPEN,			///< Could not open comm port.
 	LPFK_E_NOT_PRESENT,			///< LPFK not present on specified port.
 	LPFK_E_COMMS,				///< Communication error.
-	LPFK_E_PARAM				///< Invalid function parameter.
+	LPFK_E_PARAM,				///< Invalid function parameter.
+	LPFK_E_NOT_ENABLED			///< Attempt to read key when LPFK disabled
 };
 
 /**
@@ -99,12 +100,40 @@ int lpfk_close(LPFK_CTX *ctx);
 int lpfk_enable(LPFK_CTX *ctx, int val);
 
 /**
+ * @brief	Set or clear an LED in the cached LED mask buffer.
+ * @param	ctx		Pointer to an LPFK_CTX struct initialised by lpfk_open().
+ * @param	num		LED/key number, from 0 to 31.
+ * @param	state	State, true for on, false for off.
+ * @return	LPFK_E_OK on success, LPFK_E_PARAM on bad parameter, LPFK_E_COMMS
+ * 			on comms error.
+ */
+int lpfk_set_led_cached(LPFK_CTX *ctx, const int num, const int state);
+
+/**
+ * @brief	Set or clear all the LEDs in the shadow register.
+ * @param	ctx		Pointer to an LPFK_CTX struct initialised by lpfk_open().
+ * @param	state	State, true for on, false for off.
+ * @return	LPFK_E_OK on success.
+ */
+int lpfk_set_leds_cached(LPFK_CTX *ctx, const int state);
+
+/**
+ * @brief	Set the LPFK's LED state from the cached LED mask.
+ * @param	ctx		Pointer to an LPFK_CTX struct initialised by lpfk_open().
+ * @return	LPFK_E_OK on success, LPFK_E_PARAM on bad parameter, LPFK_E_COMMS
+ * 			on comms error.
+ */
+int lpfk_update_leds(LPFK_CTX *ctx);
+
+/**
  * @brief	Set or clear an LED on the LPFK.
  * @param	ctx		Pointer to an LPFK_CTX struct initialised by lpfk_open().
  * @param	num		LED/key number, from 0 to 31.
  * @param	state	State, true for on, false for off.
  * @return	LPFK_E_OK on success, LPFK_E_PARAM on bad parameter, LPFK_E_COMMS
  * 			on comms error.
+ * @note	Equivalent to a call to lpfk_set_led_cached() followed by a call
+ * 			to lpfk_update_leds().
  */
 int lpfk_set_led(LPFK_CTX *ctx, const int num, const int state);
 
@@ -114,6 +143,8 @@ int lpfk_set_led(LPFK_CTX *ctx, const int num, const int state);
  * @param	state	State, true for on, false for off.
  * @return	LPFK_E_OK on success, LPFK_E_PARAM on bad parameter, LPFK_E_COMMS
  * 			on comms error.
+ * @note	Equivalent to a call to lpfk_set_leds_cached() followed by a call
+ * 			to lpfk_update_leds().
  */
 int lpfk_set_leds(LPFK_CTX *ctx, const int state);
 
