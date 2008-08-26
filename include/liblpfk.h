@@ -66,11 +66,12 @@ typedef struct {
  */
 enum {
 	LPFK_E_OK = 0,				///< No error, success.
-	LPFK_E_PORT_OPEN,			///< Could not open comm port.
-	LPFK_E_NOT_PRESENT,			///< LPFK not present on specified port.
-	LPFK_E_COMMS,				///< Communication error.
-	LPFK_E_PARAM,				///< Invalid function parameter.
-LPFK_E_NOT_ENABLED			///< Attempt to read key when LPFK disabled
+	LPFK_E_NO_KEYS = -1,		///< No keys in input buffer
+	LPFK_E_PORT_OPEN = -2,		///< Could not open comm port.
+	LPFK_E_NOT_PRESENT = -3,	///< LPFK not present on specified port.
+	LPFK_E_COMMS = -4,			///< Communication error.
+	LPFK_E_PARAM = -5,			///< Invalid function parameter.
+	LPFK_E_NOT_ENABLED = -6		///< Attempt to read key when LPFK disabled
 };
 
 /**
@@ -159,7 +160,7 @@ int lpfk_get_led(LPFK_CTX *ctx, const int num);
 /**
  * @brief	Read a key from the LPFK
  * @param	ctx		Pointer to an LPFK_CTX struct initialised by lpfk_open().
- * @return	-1 if no keys in buffer, 0-31 for key 1-32 down.
+ * @return	LPFK_E_NO_KEYS if no keys in buffer, 0-31 for key 1-32 down.
  */
 int lpfk_read(LPFK_CTX *ctx);
 

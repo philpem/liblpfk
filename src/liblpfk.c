@@ -361,7 +361,7 @@ int lpfk_read(LPFK_CTX *ctx)
 
 	if ((nbytes < 1) || (key > 31)) {
 		// no keys buffered, or keycode invalid.
-		return -1;
+		return LPFK_E_NO_KEYS;
 	} else {
 		// key buffered, pass it along.
 		return key;
