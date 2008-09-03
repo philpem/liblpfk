@@ -5,6 +5,8 @@
 #include <string.h>
 #include "liblpfk.h"
 
+#define LIFE_ALGORITHM_NAIVE
+
 /************************
  * copied from http://linux-sxs.org/programming/kbhit.html
  */
@@ -153,19 +155,79 @@ int main(void)
 				nei = 0;
 
 				// count neighbours
+#ifdef LIFE_ALGORITHM_NAIVE
+				/// NAIVE ALGORITHM
+				// Assumes every cell outside the grid is dead.
 				if (y > 0) {
 					if (x > 0) { if (old_gamegrid[y-1][x-1]) nei++; }
 					if (old_gamegrid[y-1][x]) nei++;
 					if (x < 5) { if (old_gamegrid[y-1][x+1]) nei++; }
 				}
+
 				if (x > 0) { if (old_gamegrid[y][x-1]) nei++; }
 				// old_gamegrid[x][y] is us!
 				if (x < 5) { if (old_gamegrid[y][x+1]) nei++; }
+
 				if (y < 5) {
 					if (x > 0) { if (old_gamegrid[y+1][x-1]) nei++; }
 					if (old_gamegrid[y+1][x]) nei++;
 					if (x < 5) { if (old_gamegrid[y+1][x+1]) nei++; }
 				}
+#else
+				/// WRAPPING ALGORITHM
+				// Accesses off of one side of the grid are wrapped to the
+				// opposite side.
+				//
+				// WARNING: this algorithm has NOT been extensively tested,
+				// and completely screws up the glider test.
+				//
+				// TODO: test and debug:
+				if (y > 0) {
+					if (x > 0)	{ if (old_gamegrid[y-1][x-1]) nei++; }
+						else	{ if (old_gamegrid[y-1][5]) nei++; }
+
+					if (old_gamegrid[y-1][x]) nei++;
+
+					if (x < 5)	{ if (old_gamegrid[y-1][x+1]) nei++; }
+						else	{ if (old_gamegrid[y-1][0]) nei++; }
+				} else {
+					if (x > 0)	{ if (old_gamegrid[5][x-1]) nei++; }
+						else	{ if (old_gamegrid[5][5]) nei++; }
+						
+					if (old_gamegrid[y-1][x]) nei++;
+
+					if (x < 5)	{ if (old_gamegrid[5][x+1]) nei++; }
+						else	{ if (old_gamegrid[5][0]) nei++; }
+				}
+
+
+				if (x > 0)	{ if (old_gamegrid[y][x-1]) nei++; }
+					else	{ if (old_gamegrid[y][5]) nei++; }
+
+				// old_gamegrid[x][y] is us!
+
+				if (x < 5)	{ if (old_gamegrid[y][x+1]) nei++; }
+					else	{ if (old_gamegrid[y][0]) nei++; }
+
+
+				if (y < 5) {
+					if (x > 0) { if (old_gamegrid[y+1][x-1]) nei++; }
+						else	{ if (old_gamegrid[y+1][5]) nei++; }	///
+
+					if (old_gamegrid[y+1][x]) nei++;
+
+					if (x < 5) { if (old_gamegrid[y+1][x+1]) nei++; }
+						else	{ if (old_gamegrid[y+1][0]) nei++; }	///
+				} else {
+					if (x > 0) { if (old_gamegrid[y+1][x-1]) nei++; }
+						else	{ if (old_gamegrid[y+1][5]) nei++; }	///
+
+					if (old_gamegrid[y+1][x]) nei++;
+
+					if (x < 5) { if (old_gamegrid[y+1][x+1]) nei++; }
+						else	{ if (old_gamegrid[y-1][0]) nei++; }	///
+				}
+#endif
 
 				// so what happens to our cell?
 				if (old_gamegrid[y][x]) {
