@@ -10,7 +10,7 @@ doc:	Doxyfile src/liblpfk.c include/liblpfk.h
 	doxygen
 
 clean:
-	-rm -f lpfktest liblpfk.so*
+	-rm -f lpfktest lpfklife lpfkbinclock liblpfk.so*
 	-rm -f src/*.o test/*.o
 	-rm -f src/*~ test/*~ *~
 
@@ -21,6 +21,9 @@ lpfktest:	test/lpfktest.o
 	$(CC) -o $@ $< -L. -llpfk
 
 lpfklife:	test/lpfklife.o
+	$(CC) -o $@ $< -L. -llpfk
+
+lpfkbinclock:	test/lpfkbinclock.o
 	$(CC) -o $@ $< -L. -llpfk
 
 src/liblpfk.o:		include/liblpfk.h
