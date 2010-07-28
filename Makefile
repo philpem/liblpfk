@@ -3,7 +3,7 @@ SONAME=liblpfk.so.1
 
 .PHONY:	all doc clean
 
-all:	liblpfk.so lpfktest lpfklife
+all:	liblpfk.so lpfktest lpfklife lpfkbinclock
 	ldconfig -n .
 
 doc:	Doxyfile src/liblpfk.c include/liblpfk.h
