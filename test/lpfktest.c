@@ -42,8 +42,9 @@ int main(int argc, char **argv)
 		usleep(100000);
 	}
 
-	// Turn LEDs off
+	// Turn LEDs off and enable LPFK keystroke input
 	lpfk_set_leds(&ctx, false);
+	lpfk_enable(&ctx, true);
 
 	printf("Now press the keys on the LPFK...\n");
 
